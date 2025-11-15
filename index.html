@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Particle Heart Pulse</title>
+    <title>Neon Pulse Heart</title>
     <style>
       * {
         box-sizing: border-box;
@@ -12,376 +12,234 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background: radial-gradient(circle at top, #24021d, #080108 60%, #010101);
-        background-size: 160% 160%;
-        animation: drift 18s ease-in-out infinite alternate;
+        background: radial-gradient(circle at 20% 20%, #270125, #050107 60%);
         font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         overflow: hidden;
+        color: #fce4ff;
       }
 
-      body::before,
-      body::after {
-        content: "";
+      .glow-layer {
         position: fixed;
-        inset: 0;
+        inset: -20%;
+        background:
+          radial-gradient(circle at 15% 20%, rgba(255, 65, 155, 0.35), transparent 45%),
+          radial-gradient(circle at 85% 10%, rgba(120, 60, 255, 0.3), transparent 50%),
+          radial-gradient(circle at 45% 80%, rgba(255, 110, 190, 0.2), transparent 40%);
+        filter: blur(30px);
+        opacity: 0.9;
+        animation: background-drift 22s ease-in-out infinite alternate;
         pointer-events: none;
-        mix-blend-mode: screen;
-        opacity: 0.4;
-      }
-
-      body::before {
-        background: radial-gradient(circle at 20% 30%, rgba(255, 0, 120, 0.18), transparent 50%),
-          radial-gradient(circle at 70% 20%, rgba(115, 93, 255, 0.18), transparent 45%),
-          radial-gradient(circle at 40% 70%, rgba(255, 120, 190, 0.13), transparent 60%);
-        filter: blur(12px);
-      }
-
-      body::after {
-        background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-        background-size: 120px 120px;
-        animation: twinkle 12s linear infinite;
       }
 
       canvas {
         display: block;
         width: 100vw;
         height: 100vh;
-        background: transparent;
-        position: relative;
-        z-index: 1;
       }
 
-      .aurora {
+      .tagline {
         position: fixed;
-        width: 75vmax;
-        height: 75vmax;
-        border-radius: 45% 55% 60% 40%;
-        filter: blur(80px);
-        opacity: 0.55;
-        mix-blend-mode: screen;
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      .aurora-1 {
-        top: -20vmax;
-        left: -15vmax;
-        background: radial-gradient(circle, rgba(255, 71, 173, 0.5), transparent 60%);
-      }
-
-      .aurora-2 {
-        bottom: -25vmax;
-        right: -20vmax;
-        background: radial-gradient(circle, rgba(136, 56, 255, 0.45), transparent 60%);
-      }
-
-      .aurora-3 {
-        top: 10vmax;
-        right: 5vmax;
-        background: radial-gradient(circle, rgba(255, 181, 191, 0.35), transparent 70%);
-      }
-
-      .hud {
-        position: fixed;
-        bottom: 3vh;
-        left: 0;
+        bottom: 4vh;
         width: 100%;
         text-align: center;
-        letter-spacing: 0.6em;
+        letter-spacing: 0.5em;
+        font-size: 0.75rem;
         text-transform: uppercase;
-        font-size: 0.8rem;
-        font-weight: 500;
-        color: rgba(255, 181, 231, 0.85);
-        text-shadow: 0 0 12px rgba(255, 71, 173, 0.5);
-        z-index: 2;
+        opacity: 0.8;
+        text-shadow: 0 0 18px rgba(255, 100, 170, 0.7);
         pointer-events: none;
-        animation: hud-glow 3s ease-in-out infinite;
+        animation: tagline-glow 3.5s ease-in-out infinite;
       }
 
-      @keyframes drift {
+      @keyframes background-drift {
         0% {
-          background-position: 20% 30%;
+          transform: translate3d(-3%, -2%, 0) scale(0.9);
         }
         100% {
-          background-position: 80% 70%;
+          transform: translate3d(3%, 2%, 0) scale(1.1);
         }
       }
 
-      @keyframes twinkle {
-        0% {
-          transform: translate3d(0, 0, 0);
-        }
-        100% {
-          transform: translate3d(40px, 30px, 0);
-        }
-      }
-
-      @keyframes hud-glow {
+      @keyframes tagline-glow {
         0%,
         100% {
           opacity: 0.6;
         }
         50% {
-          opacity: 1;
+          opacity: 0.95;
         }
       }
     </style>
   </head>
   <body>
-    <div class="aurora aurora-1"></div>
-    <div class="aurora aurora-2"></div>
-    <div class="aurora aurora-3"></div>
-    <canvas id="heart-canvas"></canvas>
-    <div class="hud">pulse mode</div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+    <div class="glow-layer"></div>
+    <canvas id="heart"></canvas>
+    <p class="tagline">resonant bloom</p>
     <script>
-      window.addEventListener("load", () => {
-        const canvas = document.getElementById("heart-canvas");
-        const ctx = canvas.getContext("2d");
-        const HEART_SAMPLES = 1024;
-        const particles = [];
-        const embers = [];
-        const pulseRings = [];
-        const heartLut = [];
-        let width;
-        let height;
-        let centerX;
-        let centerY;
-        let lastPulse = 0;
-        let lastTime = performance.now();
-        let dpr = window.devicePixelRatio || 1;
-        let particleCount = 1600;
-        let emberCount = 180;
-        const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-        const heartLookupLength = HEART_SAMPLES;
+      const canvas = document.getElementById("heart");
+      const ctx = canvas.getContext("2d");
+      const DPR = window.devicePixelRatio || 1;
+      const HEART_STEPS = 1600;
+      const STROKE_PARTICLES = [];
+      const SPARKS = [];
+      const pathPoints = [];
+      let width = 0;
+      let height = 0;
+      let centerX = 0;
+      let centerY = 0;
+      let scale = 1;
+      let cursor = 0;
+      let strokeAccumulator = 0;
+      let lastTime = performance.now();
 
-        function resizeCanvas() {
-          dpr = window.devicePixelRatio || 1;
-          width = window.innerWidth;
-          height = window.innerHeight;
-          canvas.width = width * dpr;
-          canvas.height = height * dpr;
-          ctx.setTransform(1, 0, 0, 1, 0, 0);
-          ctx.scale(dpr, dpr);
-          centerX = width / 2;
-          centerY = height / 2;
-          computeCounts();
-          createParticles();
-          createEmbers();
+      function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width * DPR;
+        canvas.height = height * DPR;
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(DPR, DPR);
+        centerX = width / 2;
+        centerY = height / 2 + height * 0.02;
+        scale = Math.min(width, height) * 0.032;
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+
+      function buildHeartPath() {
+        pathPoints.length = 0;
+        for (let i = 0; i < HEART_STEPS; i++) {
+          const t = (i / HEART_STEPS) * Math.PI * 2;
+          const x = 16 * Math.pow(Math.sin(t), 3);
+          const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+          pathPoints.push({ x, y });
         }
+      }
 
-        function computeCounts() {
-          const area = width * height;
-          particleCount = Math.round(Math.min(2200, Math.max(800, area / 900)));
-          emberCount = Math.round(Math.min(260, Math.max(120, area / 4000)));
-          if (reduceMotionQuery.matches) {
-            particleCount = Math.round(particleCount * 0.55);
-            emberCount = Math.round(emberCount * 0.55);
-          } else if (dpr > 1.5) {
-            particleCount = Math.round(particleCount * 0.9);
-          }
-        }
+      buildHeartPath();
 
-        window.addEventListener("resize", resizeCanvas);
-        reduceMotionQuery.addEventListener("change", resizeCanvas);
-        resizeCanvas();
+      function spawnStrokePoint(index) {
+        const point = pathPoints[index];
+        const jitter = (Math.random() - 0.5) * 0.9;
+        const px = centerX + (point.x + jitter) * scale;
+        const py = centerY - (point.y + jitter) * scale;
+        const size = 2.2 + Math.random() * 1.8;
+        const maxLife = 0.85 + Math.random() * 0.45;
 
-        function createParticles() {
-          particles.length = 0;
-          for (let i = 0; i < particleCount; i++) {
-            particles.push({
-              angle: Math.random() * Math.PI * 2,
-              speed: 0.0005 + Math.random() * 0.001,
-              offset: Math.random() * Math.PI * 2,
-              size: 0.6 + Math.random() * 1.4,
-              drift: Math.random() * Math.PI * 2,
-            });
-          }
-        }
+        STROKE_PARTICLES.push({
+          x: px,
+          y: py,
+          size,
+          life: 0,
+          maxLife,
+          hue: 324 + Math.random() * 24,
+        });
 
-        function createEmbers() {
-          embers.length = 0;
-          for (let i = 0; i < emberCount; i++) {
-            embers.push({
-              angle: Math.random() * Math.PI * 2,
-              radius: 100 + Math.random() * 260,
-              speed: 0.00015 + Math.random() * 0.00045,
-              drift: Math.random() * Math.PI * 2,
-              size: 0.5 + Math.random() * 1.6,
-              alpha: 0.2 + Math.random() * 0.35,
-            });
-          }
-        }
-
-        buildHeartLut();
-
-        function buildHeartLut() {
-          heartLut.length = 0;
-          for (let i = 0; i < heartLookupLength; i++) {
-            const t = (i / heartLookupLength) * Math.PI * 2;
-            const x = 16 * Math.pow(Math.sin(t), 3);
-            const y =
-              13 * Math.cos(t) -
-              5 * Math.cos(2 * t) -
-              2 * Math.cos(3 * t) -
-              Math.cos(4 * t);
-            heartLut.push({ x, y });
-          }
-        }
-
-        function lerp(a, b, t) {
-          return a + (b - a) * t;
-        }
-
-        function animate(time) {
-          requestAnimationFrame(animate);
-          const delta = Math.min(32, time - lastTime || 16);
-          const deltaFactor = delta * 0.06;
-          lastTime = time;
-          ctx.globalCompositeOperation = "source-over";
-          ctx.fillStyle = "rgba(2, 1, 6, 0.1)";
-          ctx.fillRect(0, 0, width, height);
-          ctx.globalCompositeOperation = "lighter";
-          ctx.shadowColor = "rgba(255, 64, 164, 0.45)";
-          ctx.shadowBlur = 12;
-
-          if (!lastPulse || time - lastPulse > 1600) {
-            pulseRings.push({ start: time });
-            lastPulse = time;
-          }
-
-          drawPulseRings(time);
-          drawEmbers(time);
-
-          const beat = (Math.sin(time * 0.0025) + 1) / 2;
-          const scale = Math.min(width, height) * (0.024 + beat * 0.01);
-
-          particles.forEach((particle) => {
-            particle.angle += particle.speed * deltaFactor;
-            if (particle.angle > Math.PI * 2) {
-              particle.angle -= Math.PI * 2;
-            }
-
-            const t =
-              ((particle.angle + time * 0.00035) % (Math.PI * 2) + Math.PI * 2) %
-              (Math.PI * 2);
-            const heart =
-              heartLut[Math.floor((t / (Math.PI * 2)) * heartLookupLength)] || heartLut[0];
-            const hx = heart.x * scale;
-            const hy = -heart.y * scale;
-
-            const oscillation =
-              (Math.sin(time * 0.0005 + particle.offset) + 1) / 2;
-            const eased = oscillation * oscillation * (3 - 2 * oscillation);
-
-            const swirlAngle =
-              particle.angle * 2 +
-              time * 0.0005 +
-              Math.sin(particle.drift + time * 0.00035);
-            const swirlRadius =
-              Math.min(width, height) * (0.15 + 0.25 * (1 - eased));
-            const sx = Math.cos(swirlAngle) * swirlRadius;
-            const sy = Math.sin(swirlAngle) * swirlRadius;
-
-            const jitterX = Math.cos(time * 0.0032 + particle.offset) * 1.6;
-            const jitterY = Math.sin(time * 0.0032 + particle.offset) * 1.6;
-
-            const x = centerX + lerp(sx, hx, eased) + jitterX;
-            const y = centerY + lerp(sy, hy, eased) + jitterY;
-
-            const size = particle.size * (0.8 + eased * 0.9);
-            const hue = 318 + eased * 32 + beat * 18;
-            const alpha = 0.25 + 0.75 * eased;
-
-            ctx.fillStyle = `hsla(${hue}, 100%, ${55 + eased * 25 + beat * 10}%, ${alpha})`;
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
+        // trailing spark bursts
+        for (let i = 0; i < 3; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 18 + Math.random() * 35;
+          SPARKS.push({
+            x: px,
+            y: py,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0,
+            maxLife: 0.4 + Math.random() * 0.35,
+            size: 0.6 + Math.random() * 0.7,
           });
         }
+      }
 
-        function drawEmbers(time) {
-          const base = Math.min(width, height);
-          embers.forEach((ember) => {
-            ember.angle += ember.speed;
-            const ripple = Math.sin(time * 0.0004 + ember.drift) * 8;
-            const radius = ember.radius + ripple;
-            const x = centerX + Math.cos(ember.angle) * radius;
-            const y = centerY + Math.sin(ember.angle) * radius;
-            const flicker = (Math.sin(time * 0.002 + ember.drift) + 1) / 2;
-            const hue = 310 + flicker * 40;
-            const light = 35 + flicker * 40;
-            ctx.fillStyle = `hsla(${hue}, 90%, ${light}%, ${ember.alpha * (0.6 + flicker * 0.6)})`;
-            ctx.beginPath();
-            ctx.arc(x, y, ember.size * (0.6 + flicker * 0.8) * (base / 800), 0, Math.PI * 2);
-            ctx.fill();
-          });
-        }
-
-        function drawPulseRings(time) {
-          const maxRadius = Math.min(width, height) * 0.55;
-          for (let i = pulseRings.length - 1; i >= 0; i--) {
-            const ring = pulseRings[i];
-            const progress = (time - ring.start) / 1500;
-            if (progress >= 1) {
-              pulseRings.splice(i, 1);
-              continue;
-            }
-            const radius = maxRadius * (0.2 + progress * 0.8);
-            const alpha = 0.35 * (1 - progress);
-            ctx.strokeStyle = `rgba(255, 120, 210, ${alpha})`;
-            ctx.lineWidth = 1 + progress * 3;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.stroke();
+      function updateParticles(dt) {
+        for (let i = STROKE_PARTICLES.length - 1; i >= 0; i--) {
+          const p = STROKE_PARTICLES[i];
+          p.life += dt;
+          if (p.life >= p.maxLife) {
+            STROKE_PARTICLES.splice(i, 1);
+            continue;
           }
         }
 
-        initAuroraTimeline();
+        for (let i = SPARKS.length - 1; i >= 0; i--) {
+          const s = SPARKS[i];
+          s.life += dt;
+          if (s.life >= s.maxLife) {
+            SPARKS.splice(i, 1);
+            continue;
+          }
+          s.x += s.vx * dt;
+          s.y += s.vy * dt;
+          s.vx *= 0.96;
+          s.vy *= 0.96;
+        }
+      }
+
+      function drawParticles(headPoint) {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = "rgba(4, 2, 8, 0.22)";
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.globalCompositeOperation = "lighter";
+        STROKE_PARTICLES.forEach((p) => {
+          const t = p.life / p.maxLife;
+          const alpha = Math.sin(t * Math.PI);
+          ctx.fillStyle = `hsla(${p.hue}, 100%, ${55 + t * 25}%, ${0.6 * alpha})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * (0.6 + alpha * 0.8), 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        SPARKS.forEach((s) => {
+          const t = s.life / s.maxLife;
+          const alpha = 1 - t;
+          ctx.fillStyle = `rgba(255, 210, 255, ${0.4 * alpha})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // head glow
+        if (headPoint) {
+          const gradient = ctx.createRadialGradient(headPoint.x, headPoint.y, 0, headPoint.x, headPoint.y, 26);
+          gradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+          gradient.addColorStop(0.3, "rgba(255, 120, 200, 0.9)");
+          gradient.addColorStop(1, "rgba(255, 120, 200, 0)");
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(headPoint.x, headPoint.y, 26, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function animate(timestamp) {
+        const dt = Math.min(0.033, (timestamp - lastTime) / 1000);
+        lastTime = timestamp;
+
+        const drawSpeed = HEART_STEPS * 0.35 * dt;
+        strokeAccumulator += drawSpeed;
+        while (strokeAccumulator >= 1) {
+          cursor = (cursor + 1) % HEART_STEPS;
+          spawnStrokePoint(cursor);
+          strokeAccumulator -= 1;
+        }
+
+        const headPoint = pathPoints[cursor];
+        const head = {
+          x: centerX + headPoint.x * scale,
+          y: centerY - headPoint.y * scale,
+        };
+
+        updateParticles(dt);
+        drawParticles(head);
+
         requestAnimationFrame(animate);
+      }
 
-        function initAuroraTimeline() {
-          if (!window.gsap) return;
-          gsap.to(".aurora-1", {
-            duration: 18,
-            x: "12vw",
-            y: "-8vh",
-            scale: 1.2,
-            rotation: 360,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          });
-          gsap.to(".aurora-2", {
-            duration: 22,
-            x: "-10vw",
-            y: "6vh",
-            scale: 1.15,
-            rotation: -360,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          });
-          gsap.to(".aurora-3", {
-            duration: 26,
-            x: "4vw",
-            y: "-4vh",
-            scale: 1.25,
-            rotation: 270,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          });
-          gsap.to(".hud", {
-            opacity: 0.9,
-            duration: 2,
-            letterSpacing: "0.9em",
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          });
-        }
-      });
+      requestAnimationFrame(animate);
     </script>
   </body>
 </html>
